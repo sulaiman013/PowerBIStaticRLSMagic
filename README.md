@@ -8,6 +8,10 @@ It runs on a free **PPU / trial embed token** setup (no dedicated capacity), so 
 
 Everything is built on a fictional retailer, **TrailPeak Outfitters**, with a fully synthetic star-schema model. Nothing here is real customer data.
 
+![One report, filtered per user by static RLS: three users, one model, three private views](diagrams/2-static-rls-concept.png)
+
+*One report, one model, three private views. Each user's embed token carries their region role, and the filter on `dim_store` cascades through the star schema.*
+
 ---
 
 ## Table of Contents
@@ -88,6 +92,10 @@ If the AAD token or the client secret ever reached the browser, an attacker coul
 
 ## 3. Architecture and Request Flow
 
+![App-owns-data request flow across browser, portal server, and Power BI, with the two-token model and the GenerateToken body](diagrams/1-architecture-request-flow.png)
+
+*The full request flow across the browser, the trusted portal server, and Power BI, including the two-token model, the GenerateToken body, and the security boundary. Text version below.*
+
 ```
 browser (login)              portal server (Node/Express)                 Power BI
    |  POST /api/login  ─────────►  check user, map email -> RLS role, start session
@@ -163,7 +171,8 @@ PowerBIStaticRLSMagic/
 │   └── Design Asset/                 ← canvas backgrounds, wireframes, layout guide
 ├── Report (DENEB VERSION).pbix       ← the report as a PBIX (open in Desktop)
 ├── Report (HTML VERSION).pbix
-└── data/                             ← synthetic TrailPeak CSVs the model is built from
+├── data/                             ← synthetic TrailPeak CSVs the model is built from
+└── diagrams/                         ← Excalidraw source (.excalidraw) + PNG exports used in this README
 ```
 
 ### What is deliberately NOT in the repo
@@ -304,6 +313,10 @@ Demo users (password `demo123` for all):
 | `a@gmail.com` | Mountain Region |
 | `b@gmail.com` | Pacific Region |
 | `c@gmail.com` | Southwest Region |
+
+![Portal wireframes: the sign-in page and the report page shell that embeds the RLS-filtered report](diagrams/3-portal-wireframes.png)
+
+*Left: the sign-in page. Right: the report page shell, with a top bar showing the role and token-usage chips (from the server session), KPI cards, filters, and the RLS-filtered report.*
 
 ---
 
