@@ -1,0 +1,43 @@
+relationship AutoDetected_2b1ff726-47b2-4abe-8854-b7abc53eacc8
+	fromColumn: fact_pnl_actuals.AccountKey
+	toColumn: dim_account.AccountKey
+
+relationship AutoDetected_aebaf7d7-4e64-4191-a91e-d8ffd73ba64b
+	fromColumn: fact_pnl_actuals.StoreKey
+	toColumn: dim_store.StoreKey
+
+relationship AutoDetected_7cba6d16-dc8e-4630-983b-12b9e7a3f9df
+	fromColumn: fact_pnl_budget.AccountKey
+	toColumn: dim_account.AccountKey
+
+relationship AutoDetected_515bd398-7cd5-4df3-9be2-c47635c34a05
+	fromColumn: fact_pnl_budget.StoreKey
+	toColumn: dim_store.StoreKey
+
+relationship AutoDetected_b3caffca-1d7d-47e4-bc6c-dc4d6572f5d4
+	fromColumn: fact_sales.ProductKey
+	toColumn: dim_product.ProductKey
+
+relationship AutoDetected_064bcc65-e0df-4834-9451-fc363f03a578
+	fromColumn: fact_sales.StoreKey
+	toColumn: dim_store.StoreKey
+
+relationship 8f2a1c3d-1111-4a01-9b1a-d4e5f6a7b801
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_pnl_actuals.Date
+	toColumn: dim_date.Date
+
+relationship 8f2a1c3d-1111-4a01-9b1a-d4e5f6a7b802
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_pnl_budget.Date
+	toColumn: dim_date.Date
+
+relationship 8f2a1c3d-1111-4a01-9b1a-d4e5f6a7b803
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_sales.Date
+	toColumn: dim_date.Date
+
+relationship 8f2a1c3d-1111-4a01-9b1a-d4e5f6a7b804
+	fromColumn: bridge_pnl_line_account.LineKey
+	toColumn: dim_pnl_layout.LineKey
+

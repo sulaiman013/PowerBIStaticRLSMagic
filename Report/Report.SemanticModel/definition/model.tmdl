@@ -1,0 +1,32 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["dim_account","dim_date","dim_product","dim_store","dim_pnl_layout","bridge_pnl_line_account","fact_pnl_actuals","fact_pnl_budget","fact_sales","_Measures"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_account
+ref table dim_date
+ref table dim_product
+ref table dim_store
+ref table fact_pnl_actuals
+ref table fact_pnl_budget
+ref table fact_sales
+ref table dim_pnl_layout
+ref table bridge_pnl_line_account
+ref table _Measures
+
+ref role 'Mountain Region'
+ref role 'Pacific Region'
+ref role 'Southwest Region'
+
+ref cultureInfo en-US
+

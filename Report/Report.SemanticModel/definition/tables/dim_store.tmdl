@@ -1,0 +1,92 @@
+table dim_store
+	lineageTag: 2174e755-c12d-43c1-be03-0c99e92d3222
+
+	column StoreKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 04fef18b-8420-4028-bd8d-1679d6425c2c
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreCode
+		dataType: string
+		lineageTag: 7b675ede-81b0-4e1b-a5ad-997b6ac37621
+		summarizeBy: none
+		sourceColumn: StoreCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreName
+		dataType: string
+		lineageTag: a1d462b7-6738-41d1-9860-ece007014aaa
+		summarizeBy: none
+		sourceColumn: StoreName
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: ab4d046b-d526-4fd9-a433-9e14750679f1
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: 849ccf4d-876a-4dcb-82c1-3ff6e4392ae6
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: f054a7a5-e4d4-47cb-a695-62636208bcf5
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreTier
+		dataType: string
+		lineageTag: 9879ca0d-8c20-4383-b446-01cc093d21e2
+		summarizeBy: none
+		sourceColumn: StoreTier
+
+		annotation SummarizationSetBy = Automatic
+
+	column SquareFeet
+		dataType: int64
+		formatString: 0
+		lineageTag: 6e5c53eb-d9fd-45a9-af3b-830abb75339b
+		summarizeBy: none
+		sourceColumn: SquareFeet
+
+		annotation SummarizationSetBy = User
+
+	column OpenDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: b4ea3c9d-a860-47a2-b6ad-1e1781ff9d73
+		summarizeBy: none
+		sourceColumn: OpenDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition dim_store = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\dim_store.csv"),[Delimiter=",", Columns=9, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"StoreKey", Int64.Type}, {"StoreCode", type text}, {"StoreName", type text}, {"City", type text}, {"State", type text}, {"Region", type text}, {"StoreTier", type text}, {"SquareFeet", Int64.Type}, {"OpenDate", type date}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

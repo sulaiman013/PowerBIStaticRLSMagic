@@ -1,0 +1,18 @@
+# ── Secrets: NEVER commit ──
+**/.env
+
+# ── Node ──
+**/node_modules/
+**/npm-debug.log*
+
+# ── Runtime logs ──
+**/generate-token.log
+
+# ── Power BI local/user state (keep the model+report definition, drop caches) ──
+**/.pbi/
+*.abf
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,19 @@
+LineKey,LineLabel,RowType,Indent,IsBold
+10,Retail Sales,Detail,1,0
+20,Online Sales,Detail,1,0
+30,Services & Repairs,Detail,1,0
+40,Total Revenue,Subtotal,0,1
+50,Product Cost,Detail,1,0
+60,Freight In,Detail,1,0
+70,Inventory Shrinkage,Detail,1,0
+80,Total Cost of Goods Sold,Subtotal,0,1
+90,Gross Profit,Total,0,1
+100,Payroll,Group,1,0
+110,Occupancy,Group,1,0
+120,Marketing,Group,1,0
+130,Selling,Group,1,0
+140,Admin,Group,1,0
+150,Total Operating Expenses,Subtotal,0,1
+160,EBITDA,Total,0,1
+170,Depreciation,Detail,1,0
+180,Operating Profit,Total,0,1

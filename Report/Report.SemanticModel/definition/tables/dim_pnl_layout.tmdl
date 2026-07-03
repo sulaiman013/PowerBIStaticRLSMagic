@@ -1,0 +1,60 @@
+table dim_pnl_layout
+	lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a401
+
+	column LineKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a402
+		summarizeBy: none
+		sourceColumn: LineKey
+
+		annotation SummarizationSetBy = User
+
+	column LineLabel
+		dataType: string
+		lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a403
+		summarizeBy: none
+		sourceColumn: LineLabel
+		sortByColumn: LineKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column RowType
+		dataType: string
+		lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a404
+		summarizeBy: none
+		sourceColumn: RowType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Indent
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a405
+		summarizeBy: none
+		sourceColumn: Indent
+
+		annotation SummarizationSetBy = User
+
+	column IsBold
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a1b2c3d-0001-4e5f-8a9b-c0d1e2f3a406
+		summarizeBy: none
+		sourceColumn: IsBold
+
+		annotation SummarizationSetBy = User
+
+	partition dim_pnl_layout = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\dim_pnl_layout.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"LineKey", Int64.Type}, {"LineLabel", type text}, {"RowType", type text}, {"Indent", Int64.Type}, {"IsBold", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

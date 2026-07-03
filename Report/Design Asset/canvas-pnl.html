@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>html,body{margin:0;padding:0;overflow:hidden;}</style></head>
+<body>
+<svg width="1280" height="1200" viewBox="0 0 1280 1200" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="rgb(14,48,35)"/>
+      <stop offset="1" stop-color="rgb(45,106,79)"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="rgb(15,23,42)" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+
+  <!-- page background -->
+  <rect width="1280" height="1200" fill="rgb(244,247,245)"/>
+
+  <!-- faint topographic contours, bottom right -->
+  <g fill="none" stroke="rgb(45,106,79)" stroke-opacity="0.06" stroke-width="1.5">
+    <path d="M980,1200 C1030,1130 1130,1120 1180,1060 C1220,1012 1260,1010 1280,990"/>
+    <path d="M1040,1200 C1090,1146 1170,1140 1210,1092 C1240,1056 1266,1052 1280,1040"/>
+    <path d="M1110,1200 C1150,1164 1216,1158 1244,1124 C1262,1102 1274,1100 1280,1094"/>
+  </g>
+
+  <!-- header band -->
+  <rect x="0" y="0" width="1280" height="72" fill="url(#hdr)"/>
+  <rect x="0" y="72" width="1280" height="3" fill="rgb(217,119,6)"/>
+  <!-- decorative peaks in header, right side -->
+  <g opacity="0.16" fill="rgb(255,255,255)">
+    <path d="M880,72 L940,20 L1000,72 Z"/>
+    <path d="M960,72 L1035,10 L1110,72 Z"/>
+    <path d="M1080,72 L1140,26 L1200,72 Z"/>
+  </g>
+  <path d="M1005,35 L1035,10 L1065,35" fill="none" stroke="rgb(217,119,6)" stroke-width="3" opacity="0.85"/>
+  <!-- logo mark -->
+  <g transform="translate(28,16)">
+    <path d="M0,40 L16,10 L26,26 L34,4 L48,40 Z" fill="rgb(255,255,255)"/>
+    <path d="M26,26 L34,4 L42,26" fill="none" stroke="rgb(217,119,6)" stroke-width="3"/>
+  </g>
+  <text x="92" y="38" font-size="21" font-weight="700" letter-spacing="1.5" fill="rgb(255,255,255)">TRAILPEAK</text>
+  <text x="222" y="38" font-size="21" font-weight="300" letter-spacing="4" fill="rgb(178,210,193)">OUTFITTERS</text>
+  <text x="93" y="56" font-size="10.5" letter-spacing="2.5" fill="rgb(148,190,168)">FINANCE &#183; MONTHLY REPORTING</text>
+  <!-- page title, right -->
+  <text x="1252" y="34" text-anchor="end" font-size="17" font-weight="700" fill="rgb(255,255,255)">Profit &amp; Loss Statement</text>
+  <text x="1252" y="53" text-anchor="end" font-size="11" letter-spacing="1.5" fill="rgb(178,210,193)">ACTUAL VS BUDGET &#183; PAGE 1 OF 2</text>
+
+  <!-- KPI strip -->
+  <text x="26" y="103" font-size="11" font-weight="700" letter-spacing="2.5" fill="rgb(100,116,139)">KEY METRICS</text>
+  <g filter="url(#soft)">
+    <rect x="24"  y="112" width="296" height="136" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+    <rect x="336" y="112" width="296" height="136" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+    <rect x="648" y="112" width="296" height="136" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+    <rect x="960" y="112" width="296" height="136" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+  </g>
+  <rect x="24"  y="112" width="4" height="136" rx="2" fill="rgb(45,106,79)"/>
+  <rect x="336" y="112" width="4" height="136" rx="2" fill="rgb(45,106,79)"/>
+  <rect x="648" y="112" width="4" height="136" rx="2" fill="rgb(45,106,79)"/>
+  <rect x="960" y="112" width="4" height="136" rx="2" fill="rgb(217,119,6)"/>
+
+  <!-- filter rail -->
+  <text x="26" y="285" font-size="11" font-weight="700" letter-spacing="2.5" fill="rgb(100,116,139)">FILTERS</text>
+  <g filter="url(#soft)">
+    <rect x="24" y="294" width="1232" height="104" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+  </g>
+  <text x="44"  y="322" font-size="10" font-weight="700" letter-spacing="2" fill="rgb(148,163,184)">PERIOD</text>
+  <text x="344" y="322" font-size="10" font-weight="700" letter-spacing="2" fill="rgb(148,163,184)">REGION</text>
+  <text x="644" y="322" font-size="10" font-weight="700" letter-spacing="2" fill="rgb(148,163,184)">STORE</text>
+  <text x="944" y="322" font-size="10" font-weight="700" letter-spacing="2" fill="rgb(148,163,184)">DATA STATUS</text>
+  <rect x="44"  y="330" width="280" height="48" rx="8" fill="rgb(244,247,245)" stroke="rgb(226,232,240)"/>
+  <rect x="344" y="330" width="280" height="48" rx="8" fill="rgb(244,247,245)" stroke="rgb(226,232,240)"/>
+  <rect x="644" y="330" width="280" height="48" rx="8" fill="rgb(244,247,245)" stroke="rgb(226,232,240)"/>
+  <rect x="944" y="330" width="292" height="48" rx="8" fill="rgb(240,250,244)" stroke="rgb(205,227,214)"/>
+
+  <!-- main statement container -->
+  <g filter="url(#soft)">
+    <rect x="14" y="414" width="1252" height="778" rx="14" fill="rgb(255,255,255)" stroke="rgb(226,232,240)"/>
+  </g>
+</svg>
+</body>
+</html>

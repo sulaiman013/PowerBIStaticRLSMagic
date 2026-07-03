@@ -1,0 +1,73 @@
+table fact_sales
+	lineageTag: 44f40288-7827-4537-9185-8cf45e26bc8a
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9711d03d-30fa-40f5-89fa-4d81d05627bf
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column StoreKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 7bdf23e9-bd63-42c2-9225-eb04e135da15
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 1fc67365-f447-49c3-90d3-30692eab3430
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitsSold
+		dataType: int64
+		formatString: 0
+		lineageTag: 9bb5d946-62b2-458e-955f-4e9b2c1a9ccd
+		summarizeBy: sum
+		sourceColumn: UnitsSold
+
+		annotation SummarizationSetBy = Automatic
+
+	column Revenue
+		dataType: double
+		lineageTag: 26991dd4-fb9a-4dcc-b812-e803632eb026
+		summarizeBy: sum
+		sourceColumn: Revenue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Cost
+		dataType: double
+		lineageTag: ecff09e4-579f-456b-bed7-ee40582465d5
+		summarizeBy: sum
+		sourceColumn: Cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_sales = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\fact_sales.csv"),[Delimiter=",", Columns=6, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Date", type date}, {"StoreKey", Int64.Type}, {"ProductKey", Int64.Type}, {"UnitsSold", Int64.Type}, {"Revenue", type number}, {"Cost", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

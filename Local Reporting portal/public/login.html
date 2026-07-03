@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporting Portal — Sign in</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="login-card" id="login-form">
+      <h1>Reporting Portal</h1>
+      <p class="sub">Embedded Power BI with per-user row-level security.</p>
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="username" placeholder="a@gmail.com" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••" required />
+
+      <button type="submit" class="btn-primary">Sign in</button>
+      <div class="error" id="error"></div>
+
+      <div class="hint">
+        <strong>Demo users</strong> (password <code>demo123</code> for all):<br />
+        <code>a@gmail.com</code> — Mountain Region<br />
+        <code>b@gmail.com</code> — Pacific Region<br />
+        <code>c@gmail.com</code> — Southwest Region
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorEl = document.getElementById('error');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          errorEl.textContent = body.error || 'Sign in failed';
+          return;
+        }
+        window.location.href = '/report.html';
+      } catch (err) {
+        errorEl.textContent = 'Network error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

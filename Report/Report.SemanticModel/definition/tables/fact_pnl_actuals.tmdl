@@ -1,0 +1,54 @@
+table fact_pnl_actuals
+	lineageTag: d6d82949-0e24-46fc-b275-fe17a96a0a1d
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: b6e5338e-75c8-48b6-b9a2-d40aba69ae30
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column StoreKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 8c1ad392-9999-4a3f-b189-a8e0e87a0e1b
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column AccountKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 66844b6e-9ef9-4810-b2cd-afd7add2201b
+		summarizeBy: none
+		sourceColumn: AccountKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amount
+		dataType: double
+		lineageTag: 1a3420af-5b4a-41fe-9a46-28ed8fd3e6c5
+		summarizeBy: sum
+		sourceColumn: Amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_pnl_actuals = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\fact_pnl_actuals.csv"),[Delimiter=",", Columns=4, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Date", type date}, {"StoreKey", Int64.Type}, {"AccountKey", Int64.Type}, {"Amount", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

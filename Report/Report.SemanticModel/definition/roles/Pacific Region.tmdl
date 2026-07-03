@@ -1,0 +1,5 @@
+role 'Pacific Region'
+	modelPermission: read
+
+	tablePermission dim_store =
+			dim_store[Region] = "Pacific"

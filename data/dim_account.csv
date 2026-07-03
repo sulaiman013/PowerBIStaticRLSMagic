@@ -1,0 +1,21 @@
+AccountKey,Account,Category,Subcategory,Sign,StatementSort
+4000,Retail Sales,Revenue,Retail,1,10
+4100,Online Sales,Revenue,Online,1,20
+4200,Services & Repairs,Revenue,Services,1,30
+5000,Product Cost,Cost of Goods Sold,Product,-1,40
+5100,Freight In,Cost of Goods Sold,Freight,-1,50
+5200,Inventory Shrinkage,Cost of Goods Sold,Shrinkage,-1,60
+6000,Salaries & Wages,Operating Expenses,Payroll,-1,70
+6010,Payroll Taxes & Benefits,Operating Expenses,Payroll,-1,80
+6100,Rent,Operating Expenses,Occupancy,-1,90
+6110,Utilities,Operating Expenses,Occupancy,-1,100
+6120,Repairs & Maintenance,Operating Expenses,Occupancy,-1,110
+6200,Digital Advertising,Operating Expenses,Marketing,-1,120
+6210,Events & Sponsorships,Operating Expenses,Marketing,-1,130
+6300,Card Processing Fees,Operating Expenses,Selling,-1,140
+6310,Packaging & Supplies,Operating Expenses,Selling,-1,150
+6400,Insurance,Operating Expenses,Admin,-1,160
+6410,Software & Subscriptions,Operating Expenses,Admin,-1,170
+6420,Professional Fees,Operating Expenses,Admin,-1,180
+6430,Office & Miscellaneous,Operating Expenses,Admin,-1,190
+7000,Depreciation,Depreciation,Depreciation,-1,200

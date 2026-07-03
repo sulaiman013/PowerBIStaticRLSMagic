@@ -1,0 +1,748 @@
+table _Measures
+	lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a601
+
+	/// Signed P&L actuals: amounts stored positive, dim_account[Sign] applies +1 revenue / -1 cost.
+	measure 'P&L Amount' = SUMX ( fact_pnl_actuals, fact_pnl_actuals[Amount] * RELATED ( dim_account[Sign] ) )
+		formatString: #,##0
+		displayFolder: 1. Base
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a602
+
+	/// Signed budget. Full-year budget exists through Dec 2026.
+	measure 'Budget Amount' = SUMX ( fact_pnl_budget, fact_pnl_budget[Amount] * RELATED ( dim_account[Sign] ) )
+		formatString: #,##0
+		displayFolder: 1. Base
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a603
+
+	/// Last date with posted actuals, ignoring all filters. Anchors every closed-period guard.
+	measure 'Last Closed Date' = CALCULATE ( MAX ( fact_pnl_actuals[Date] ), REMOVEFILTERS () )
+		formatString: Long Date
+		displayFolder: 1. Base
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a604
+
+	/// Budget restricted to closed months only, so variance always compares like for like.
+	measure 'Budget (Closed)' =
+			VAR _lc = [Last Closed Date]
+			RETURN
+			    CALCULATE ( [Budget Amount], KEEPFILTERS ( dim_date[Date] <= _lc ) )
+		formatString: #,##0
+		displayFolder: 1. Base
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a605
+
+	/// Immune to account cross-filtering via REMOVEFILTERS(dim_account).
+	measure 'Total Revenue' = CALCULATE ( [P&L Amount], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Revenue" )
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a606
+
+	measure 'Total COGS' = CALCULATE ( [P&L Amount], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Cost of Goods Sold" )
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a607
+
+	measure 'Gross Profit' = [Total Revenue] + [Total COGS]
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a608
+
+	measure 'Gross Margin %' = DIVIDE ( [Gross Profit], [Total Revenue] )
+		formatString: 0.0%
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a609
+
+	measure 'Total OpEx' = CALCULATE ( [P&L Amount], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Operating Expenses" )
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a610
+
+	measure EBITDA = [Gross Profit] + [Total OpEx]
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a611
+
+	measure 'EBITDA %' = DIVIDE ( [EBITDA], [Total Revenue] )
+		formatString: 0.0%
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a612
+
+	measure 'Operating Profit' = CALCULATE ( [P&L Amount], REMOVEFILTERS ( dim_account ) )
+		formatString: #,##0
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a613
+
+	measure 'Operating Margin %' = DIVIDE ( [Operating Profit], [Total Revenue] )
+		formatString: 0.0%
+		displayFolder: 2. Statement
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a614
+
+	/// Positive is favorable for both revenue and expense lines (signed amounts). Blank for unclosed months.
+	measure Variance =
+			VAR _lc = [Last Closed Date]
+			RETURN
+			    IF ( MIN ( dim_date[Date] ) > _lc, BLANK (), [P&L Amount] - [Budget (Closed)] )
+		formatString: #,##0
+		displayFolder: 3. Variance
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a615
+
+	measure 'Variance %' = DIVIDE ( [Variance], ABS ( [Budget (Closed)] ) )
+		formatString: 0.0%
+		displayFolder: 3. Variance
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a616
+
+	measure 'P&L Amount PY' = CALCULATE ( [P&L Amount], SAMEPERIODLASTYEAR ( dim_date[Date] ) )
+		formatString: #,##0
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a617
+
+	measure 'YoY %' = DIVIDE ( [P&L Amount] - [P&L Amount PY], ABS ( [P&L Amount PY] ) )
+		formatString: 0.0%
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a618
+
+	measure 'P&L Amount YTD' = CALCULATE ( [P&L Amount], DATESYTD ( dim_date[Date] ) )
+		formatString: #,##0
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a619
+
+	/// Prior-year YTD over the same elapsed months, so partial-year 2026 compares like for like.
+	measure 'P&L Amount PYTD' = CALCULATE ( [P&L Amount YTD], SAMEPERIODLASTYEAR ( dim_date[Date] ) )
+		formatString: #,##0
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a620
+
+	measure 'YTD YoY %' = DIVIDE ( [P&L Amount YTD] - [P&L Amount PYTD], ABS ( [P&L Amount PYTD] ) )
+		formatString: 0.0%
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a621
+
+	/// DATEADD, not PREVIOUSMONTH, so it also shifts correctly at quarter and year grain.
+	measure 'P&L Amount PM' = CALCULATE ( [P&L Amount], DATEADD ( dim_date[Date], -1, MONTH ) )
+		formatString: #,##0
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a622
+
+	measure 'MoM %' = DIVIDE ( [P&L Amount] - [P&L Amount PM], ABS ( [P&L Amount PM] ) )
+		formatString: 0.0%
+		displayFolder: 4. Time Intelligence
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a623
+
+	measure 'Product Revenue' = SUM ( fact_sales[Revenue] )
+		formatString: #,##0
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a624
+
+	measure 'Product Units' = SUM ( fact_sales[UnitsSold] )
+		formatString: #,##0
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a625
+
+	/// Skip ranking with a ProductKey tiebreak: stable under revenue ties, blank for products with no sales.
+	measure 'Product Rank' =
+			IF (
+			    ISBLANK ( [Product Revenue] ),
+			    BLANK (),
+			    RANKX (
+			        FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) ),
+			        [Product Revenue] + dim_product[ProductKey] / 1000000000,
+			        [Product Revenue] + SELECTEDVALUE ( dim_product[ProductKey] ) / 1000000000,
+			        DESC
+			    )
+			)
+		formatString: 0
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a626
+
+	/// Running total by the same tiebroken key, so cumulative % is monotonic even with tied revenues.
+	measure 'Cumulative Revenue' =
+			VAR _cur = [Product Revenue] + SELECTEDVALUE ( dim_product[ProductKey] ) / 1000000000
+			RETURN
+			    IF (
+			        ISBLANK ( [Product Revenue] ),
+			        BLANK (),
+			        SUMX (
+			            FILTER (
+			                ALLSELECTED ( dim_product ),
+			                NOT ISBLANK ( [Product Revenue] )
+			                    && [Product Revenue] + dim_product[ProductKey] / 1000000000 >= _cur
+			            ),
+			            [Product Revenue]
+			        )
+			    )
+		formatString: #,##0
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a627
+
+	measure 'Cumulative Revenue %' =
+			IF (
+			    ISBLANK ( [Product Revenue] ),
+			    BLANK (),
+			    DIVIDE ( [Cumulative Revenue], CALCULATE ( [Product Revenue], ALLSELECTED ( dim_product ) ) )
+			)
+		formatString: 0.0%
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a628
+
+	measure 'Revenue Share %' = DIVIDE ( [Product Revenue], CALCULATE ( [Product Revenue], ALLSELECTED ( dim_product ) ) )
+		formatString: 0.0%
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a629
+
+	/// Value for one statement display row: resolves the line's accounts through the bridge via TREATAS.
+	measure 'P&L Line Value' =
+			VAR _accts = CALCULATETABLE ( VALUES ( bridge_pnl_line_account[AccountKey] ) )
+			RETURN
+			    CALCULATE (
+			        [P&L Amount],
+			        REMOVEFILTERS ( dim_account ),
+			        TREATAS ( _accts, dim_account[AccountKey] )
+			    )
+		formatString: #,##0
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a630
+
+	measure 'Budget Line Value' =
+			VAR _accts = CALCULATETABLE ( VALUES ( bridge_pnl_line_account[AccountKey] ) )
+			RETURN
+			    CALCULATE (
+			        [Budget (Closed)],
+			        REMOVEFILTERS ( dim_account ),
+			        TREATAS ( _accts, dim_account[AccountKey] )
+			    )
+		formatString: #,##0
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a631
+
+	measure 'Line Variance' = [P&L Line Value] - [Budget Line Value]
+		formatString: #,##0
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a632
+
+	measure 'Line Variance %' = DIVIDE ( [Line Variance], ABS ( [Budget Line Value] ) )
+		formatString: 0.0%
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a633
+
+	measure 'Line % of Revenue' = DIVIDE ( [P&L Line Value], [Total Revenue] )
+		formatString: 0.0%
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a634
+
+	/// Chrome label for the report footer, e.g. "Data through Jun 2026".
+	measure 'Data Through Label' = "Data through " & FORMAT ( [Last Closed Date], "MMM YYYY" )
+		displayFolder: 7. Chrome
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a635
+
+	/// Step 3 prototype: the full P&L statement page as one HTML string. Host: HTML Content (lite), Content field well.
+	measure 'HTML P&L Statement' =
+			VAR _lastClosedRaw = [Last Closed Date]
+			VAR _lastClosed = IF ( ISBLANK ( _lastClosedRaw ), MAX ( dim_date[Date] ), _lastClosedRaw )
+			VAR _firstData = CALCULATE ( MIN ( fact_pnl_actuals[Date] ), REMOVEFILTERS () )
+			VAR _fromDate = MAX ( MIN ( dim_date[Date] ), _firstData )
+			VAR _toDate = MIN ( MAX ( dim_date[Date] ), _lastClosed )
+			VAR _period =
+			    IF (
+			        HASONEVALUE ( dim_date[YearMonthKey] ),
+			        SELECTEDVALUE ( dim_date[YearMonthLabel] ),
+			        FORMAT ( _fromDate, "MMM YYYY" ) & " to " & FORMAT ( _toDate, "MMM YYYY" )
+			    )
+			VAR _scope =
+			    SWITCH (
+			        TRUE (),
+			        HASONEVALUE ( dim_store[StoreName] ), SELECTEDVALUE ( dim_store[StoreName] ),
+			        HASONEVALUE ( dim_store[Region] ), SELECTEDVALUE ( dim_store[Region] ) & " Region",
+			        "All Stores"
+			    )
+			VAR _rows =
+			    CONCATENATEX (
+			        ALLSELECTED ( dim_pnl_layout ),
+			        VAR _v = [P&L Line Value]
+			        VAR _b = [Budget Line Value]
+			        VAR _d = [Line Variance]
+			        VAR _p = [Line Variance %]
+			        VAR _isTotal = dim_pnl_layout[RowType] = "Total"
+			        VAR _isSubtotal = dim_pnl_layout[RowType] = "Subtotal"
+			        VAR _padLeft = 10 + dim_pnl_layout[Indent] * 18
+			        VAR _weight = IF ( dim_pnl_layout[IsBold] = 1, "600", "400" )
+			        VAR _rowStyle =
+			            SWITCH (
+			                TRUE (),
+			                _isTotal, "border-top:2px solid #0f172a; background:#f4faf6;",
+			                _isSubtotal, "border-top:1px solid #cbd5e1;",
+			                ""
+			            )
+			        VAR _varColor =
+			            IF ( ISBLANK ( _d ), "#94a3b8", IF ( _d >= 0, "#16a34a", "#dc2626" ) )
+			        RETURN
+			            "<tr style='" & _rowStyle & "'>"
+			                & "<td style='padding:7px 10px 7px " & _padLeft
+			                & "px; font-weight:" & _weight & "; color:#0f172a;'>"
+			                & dim_pnl_layout[LineLabel] & "</td>"
+			                & "<td style='padding:7px 10px; text-align:right; font-weight:" & _weight
+			                & "; color:#0f172a;'>" & IF ( ISBLANK ( _v ), "-", FORMAT ( _v, "#,##0;(#,##0)" ) ) & "</td>"
+			                & "<td style='padding:7px 10px; text-align:right; color:#64748b;'>"
+			                & IF ( ISBLANK ( _b ), "-", FORMAT ( _b, "#,##0;(#,##0)" ) ) & "</td>"
+			                & "<td style='padding:7px 10px; text-align:right; font-weight:" & _weight
+			                & "; color:" & _varColor & ";'>"
+			                & IF ( ISBLANK ( _d ), "-", FORMAT ( _d, "+#,##0;(#,##0);0" ) ) & "</td>"
+			                & "<td style='padding:7px 10px; text-align:right; color:" & _varColor & ";'>"
+			                & IF ( ISBLANK ( _p ), "-", FORMAT ( _p, "+0.0%;(0.0%);0.0%" ) ) & "</td>"
+			                & "</tr>",
+			        ,
+			        dim_pnl_layout[LineKey], ASC
+			    )
+			RETURN
+			    "<div style='font-family:""Segoe UI"", sans-serif; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px 22px; height:calc(100vh - 6px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column;'>"
+			        & "<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;'>"
+			        & "<div style='font-size:19px; font-weight:700; color:#0f172a;'>Profit &amp; Loss Statement</div>"
+			        & "<div style='font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#2d6a4f;'>TrailPeak Outfitters</div>"
+			        & "</div>"
+			        & "<div style='font-size:13px; color:#64748b; margin-bottom:12px;'>" & _period
+			        & " &#183; " & _scope & " &#183; Actual vs Budget</div>"
+			        & "<table style='width:100%; border-collapse:collapse; font-size:13.5px;'>"
+			        & "<thead><tr style='border-bottom:2px solid #0f172a;'>"
+			        & "<th style='padding:6px 10px; text-align:left; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:#64748b;'>Line</th>"
+			        & "<th style='padding:6px 10px; text-align:right; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:#64748b;'>Actual</th>"
+			        & "<th style='padding:6px 10px; text-align:right; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:#64748b;'>Budget</th>"
+			        & "<th style='padding:6px 10px; text-align:right; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:#64748b;'>Variance</th>"
+			        & "<th style='padding:6px 10px; text-align:right; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:#64748b;'>Var %</th>"
+			        & "</tr></thead><tbody>" & _rows & "</tbody></table>"
+			        & "<div style='margin-top:12px; font-size:11.5px; color:#94a3b8;'>"
+			        & [Data Through Label]
+			        & " &#183; Variance blank for unclosed months &#183; HTML prototype, production visual ships in Deneb</div>"
+			        & "</div>"
+		displayFolder: 8. HTML Prototypes
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a637
+
+	/// Step 3 prototype: the full Pareto page as inline SVG in one HTML string. Host: HTML Content (lite).
+	measure 'HTML Pareto Analysis' =
+			VAR _w = 1000
+			VAR _h = 400
+			VAR _padL = 84
+			VAR _padR = 56
+			VAR _padT = 26
+			VAR _padB = 88
+			VAR _plotW = _w - _padL - _padR
+			VAR _plotH = _h - _padT - _padB
+			VAR _prods = FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) )
+			VAR _nAll = COUNTROWS ( _prods )
+			VAR _n80 = COUNTROWS ( FILTER ( _prods, [Cumulative Revenue %] < 0.80 ) ) + 1
+			VAR _nBars = MIN ( _nAll, 20 )
+			VAR _top = FILTER ( _prods, [Product Rank] <= _nBars )
+			VAR _nShown = COUNTROWS ( _top )
+			VAR _maxRev = MAXX ( _top, [Product Revenue] )
+			VAR _step = DIVIDE ( _plotW, _nShown )
+			VAR _barW = _step * 0.68
+			VAR _lastClosedRaw = [Last Closed Date]
+			VAR _lastClosed = IF ( ISBLANK ( _lastClosedRaw ), MAX ( dim_date[Date] ), _lastClosedRaw )
+			VAR _firstData = CALCULATE ( MIN ( fact_pnl_actuals[Date] ), REMOVEFILTERS () )
+			VAR _period =
+			    IF (
+			        HASONEVALUE ( dim_date[YearMonthKey] ),
+			        SELECTEDVALUE ( dim_date[YearMonthLabel] ),
+			        FORMAT ( MAX ( MIN ( dim_date[Date] ), _firstData ), "MMM YYYY" ) & " to "
+			            & FORMAT ( MIN ( MAX ( dim_date[Date] ), _lastClosed ), "MMM YYYY" )
+			    )
+			VAR _scope =
+			    SWITCH (
+			        TRUE (),
+			        HASONEVALUE ( dim_store[StoreName] ), SELECTEDVALUE ( dim_store[StoreName] ),
+			        HASONEVALUE ( dim_store[Region] ), SELECTEDVALUE ( dim_store[Region] ) & " Region",
+			        "All Stores"
+			    )
+			VAR _bars =
+			    CONCATENATEX (
+			        _top,
+			        VAR _r = [Product Rank]
+			        VAR _x = _padL + ( _r - 1 ) * _step + ( _step - _barW ) / 2
+			        VAR _bh = DIVIDE ( [Product Revenue], _maxRev ) * _plotH
+			        VAR _y = _padT + _plotH - _bh
+			        VAR _cx = _x + _barW / 2
+			        VAR _labY = _padT + _plotH + 16
+			        VAR _fill = IF ( [Cumulative Revenue %] <= 0.80, "#2d6a4f", "#cbd5e1" )
+			        RETURN
+			            "<rect x='" & ROUND ( _x, 1 ) & "' y='" & ROUND ( _y, 1 )
+			                & "' width='" & ROUND ( _barW, 1 ) & "' height='" & ROUND ( _bh, 1 )
+			                & "' rx='3' fill='" & _fill & "'/>"
+			                & "<text x='" & ROUND ( _cx, 1 ) & "' y='" & _labY
+			                & "' transform='rotate(-38 " & ROUND ( _cx, 1 ) & " " & _labY
+			                & ")' text-anchor='end' font-size='12' fill='#64748b'>"
+			                & LEFT ( dim_product[ProductName], 12 ) & "</text>",
+			        ,
+			        [Product Rank], ASC
+			    )
+			VAR _linePoints =
+			    CONCATENATEX (
+			        _top,
+			        VAR _cx = _padL + ( [Product Rank] - 1 ) * _step + _step / 2
+			        VAR _cy = _padT + ( 1 - [Cumulative Revenue %] ) * _plotH
+			        RETURN ROUND ( _cx, 1 ) & "," & ROUND ( _cy, 1 ),
+			        " ",
+			        [Product Rank], ASC
+			    )
+			VAR _dots =
+			    CONCATENATEX (
+			        _top,
+			        VAR _r = [Product Rank]
+			        VAR _cx = _padL + ( _r - 1 ) * _step + _step / 2
+			        VAR _cy = _padT + ( 1 - [Cumulative Revenue %] ) * _plotH
+			        RETURN
+			            "<circle cx='" & ROUND ( _cx, 1 ) & "' cy='" & ROUND ( _cy, 1 )
+			                & "' r='3' fill='#d97706'/>"
+			                & IF (
+			                    _r = 1 || MOD ( _r, 5 ) = 0,
+			                    "<text x='" & ROUND ( _cx, 1 ) & "' y='" & ROUND ( _cy - 8, 1 )
+			                        & "' text-anchor='middle' font-size='11.5' fill='#b45309'>"
+			                        & FORMAT ( [Cumulative Revenue %], "0%" ) & "</text>",
+			                    ""
+			                ),
+			        ,
+			        [Product Rank], ASC
+			    )
+			VAR _gridlines =
+			    CONCATENATEX (
+			        { 0.25, 0.50, 0.75, 1.00 },
+			        VAR _gy = _padT + ( 1 - [Value] ) * _plotH
+			        RETURN
+			            "<line x1='" & _padL & "' y1='" & ROUND ( _gy, 1 ) & "' x2='" & ( _w - _padR )
+			                & "' y2='" & ROUND ( _gy, 1 ) & "' stroke='#eef2f7' stroke-width='1'/>"
+			                & "<text x='" & ( _w - _padR + 8 ) & "' y='" & ROUND ( _gy + 3.5, 1 )
+			                & "' font-size='12' fill='#94a3b8'>" & FORMAT ( [Value], "0%" ) & "</text>",
+			        ""
+			    )
+			VAR _y80 = _padT + 0.2 * _plotH
+			RETURN
+			    IF (
+			        _nAll = 0,
+			        "<div style='font-family:""Segoe UI"", sans-serif; color:#64748b; padding:24px;'>No product sales in the current selection.</div>",
+			        "<div style='font-family:""Segoe UI"", sans-serif; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px 22px; height:calc(100vh - 6px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column;'>"
+			            & "<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;'>"
+			            & "<div style='font-size:19px; font-weight:700; color:#0f172a;'>Product Revenue Pareto</div>"
+			            & "<div style='font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#2d6a4f;'>TrailPeak Outfitters</div>"
+			            & "</div>"
+			            & "<div style='font-size:13px; color:#64748b; margin-bottom:8px;'>Top "
+			            & _nShown & " of " & _nAll & " products &#183; " & _period & " &#183; " & _scope & "</div>"
+			            & "<div style='display:inline-block; font-size:13px; font-weight:600; color:#2d6a4f; background:#f4faf6; border:1px solid #cde3d6; border-radius:999px; padding:4px 12px; margin-bottom:10px;'>"
+			            & _n80 & " of " & _nAll & " products drive 80% of revenue</div>"
+			            & "<div style='flex:1 1 auto; min-height:0; margin-top:4px;'><svg viewBox='0 0 " & _w & " " & _h & "' width='100%' height='100%' preserveAspectRatio='xMidYMid meet' style='display:block;' xmlns='http://www.w3.org/2000/svg'>"
+			            & _gridlines
+			            & _bars
+			            & "<line x1='" & _padL & "' y1='" & ROUND ( _y80, 1 ) & "' x2='" & ( _w - _padR )
+			            & "' y2='" & ROUND ( _y80, 1 )
+			            & "' stroke='#d97706' stroke-width='1.4' stroke-dasharray='6 4'/>"
+			            & "<polyline points='" & _linePoints
+			            & "' fill='none' stroke='#d97706' stroke-width='2.2'/>"
+			            & _dots
+			            & "</svg></div>"
+			            & "<div style='margin-top:10px; font-size:11.5px; color:#94a3b8;'>"
+			            & "Green bars are the vital few inside the 80% band &#183; amber line is cumulative revenue share &#183; "
+			            & [Data Through Label]
+			            & " &#183; HTML prototype, production visual ships in Deneb</div>"
+			            & "</div>"
+			    )
+		displayFolder: 8. HTML Prototypes
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a638
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Revenue Card' =
+			VAR _v = [Total Revenue]
+			VAR _bud = CALCULATE ( [Budget (Closed)], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Revenue" )
+			VAR _delta = DIVIDE ( _v - _bud, ABS ( _bud ) )
+			VAR _valTxt =
+			    SWITCH ( TRUE (),
+			        ABS ( _v ) >= 1000000, FORMAT ( _v / 1000000, "$0.00" ) & "M",
+			        ABS ( _v ) >= 1000, FORMAT ( _v / 1000, "$0" ) & "K",
+			        FORMAT ( _v, "$0" ) )
+			VAR _chipTxt = IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta, "+0.0%;(0.0%);0.0%" ) )
+			VAR _pos = NOT ISBLANK ( _delta ) && _delta >= 0
+			VAR _chipBg = IF ( ISBLANK ( _delta ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _delta ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>REVENUE</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs budget</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a639
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Gross Margin Card' =
+			VAR _v = [Gross Margin %]
+			VAR _budRev = CALCULATE ( [Budget (Closed)], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Revenue" )
+			VAR _budCogs = CALCULATE ( [Budget (Closed)], REMOVEFILTERS ( dim_account ), dim_account[Category] = "Cost of Goods Sold" )
+			VAR _budGm = DIVIDE ( _budRev + _budCogs, _budRev )
+			VAR _deltaPp = ( _v - _budGm ) * 100
+			VAR _valTxt = FORMAT ( _v, "0.0%" )
+			VAR _chipTxt = IF ( ISBLANK ( _deltaPp ), "n/a", FORMAT ( _deltaPp, "+0.0;(0.0);0.0" ) & " pp" )
+			VAR _pos = NOT ISBLANK ( _deltaPp ) && _deltaPp >= 0
+			VAR _chipBg = IF ( ISBLANK ( _deltaPp ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _deltaPp ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>GROSS MARGIN</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs budget</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a640
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI EBITDA Card' =
+			VAR _v = [EBITDA]
+			VAR _bud = CALCULATE ( [Budget (Closed)], REMOVEFILTERS ( dim_account ), dim_account[Category] <> "Depreciation" )
+			VAR _delta = DIVIDE ( _v - _bud, ABS ( _bud ) )
+			VAR _valTxt =
+			    SWITCH ( TRUE (),
+			        ABS ( _v ) >= 1000000, FORMAT ( _v / 1000000, "$0.00" ) & "M",
+			        ABS ( _v ) >= 1000, FORMAT ( _v / 1000, "$0" ) & "K",
+			        FORMAT ( _v, "$0" ) )
+			VAR _chipTxt = IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta, "+0.0%;(0.0%);0.0%" ) )
+			VAR _pos = NOT ISBLANK ( _delta ) && _delta >= 0
+			VAR _chipBg = IF ( ISBLANK ( _delta ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _delta ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>EBITDA</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs budget</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a641
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Operating Profit Card' =
+			VAR _v = [Operating Profit]
+			VAR _bud = CALCULATE ( [Budget (Closed)], REMOVEFILTERS ( dim_account ) )
+			VAR _delta = DIVIDE ( _v - _bud, ABS ( _bud ) )
+			VAR _valTxt =
+			    SWITCH ( TRUE (),
+			        ABS ( _v ) >= 1000000, FORMAT ( _v / 1000000, "$0.00" ) & "M",
+			        ABS ( _v ) >= 1000, FORMAT ( _v / 1000, "$0" ) & "K",
+			        FORMAT ( _v, "$0" ) )
+			VAR _chipTxt = IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta, "+0.0%;(0.0%);0.0%" ) )
+			VAR _pos = NOT ISBLANK ( _delta ) && _delta >= 0
+			VAR _chipBg = IF ( ISBLANK ( _delta ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _delta ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>OPERATING PROFIT</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs budget</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a642
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Product Revenue Card' =
+			VAR _v = [Product Revenue]
+			VAR _py = CALCULATE ( [Product Revenue], SAMEPERIODLASTYEAR ( dim_date[Date] ) )
+			VAR _delta = DIVIDE ( _v - _py, ABS ( _py ) )
+			VAR _valTxt =
+			    SWITCH ( TRUE (),
+			        ABS ( _v ) >= 1000000, FORMAT ( _v / 1000000, "$0.00" ) & "M",
+			        ABS ( _v ) >= 1000, FORMAT ( _v / 1000, "$0" ) & "K",
+			        FORMAT ( _v, "$0" ) )
+			VAR _chipTxt = IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta, "+0.0%;(0.0%);0.0%" ) )
+			VAR _pos = NOT ISBLANK ( _delta ) && _delta >= 0
+			VAR _chipBg = IF ( ISBLANK ( _delta ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _delta ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>PRODUCT REVENUE</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs last year</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a643
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Units Sold Card' =
+			VAR _v = [Product Units]
+			VAR _py = CALCULATE ( [Product Units], SAMEPERIODLASTYEAR ( dim_date[Date] ) )
+			VAR _delta = DIVIDE ( _v - _py, ABS ( _py ) )
+			VAR _valTxt =
+			    SWITCH ( TRUE (),
+			        ABS ( _v ) >= 1000000, FORMAT ( _v / 1000000, "0.00" ) & "M",
+			        ABS ( _v ) >= 1000, FORMAT ( _v / 1000, "0.0" ) & "K",
+			        FORMAT ( _v, "0" ) )
+			VAR _chipTxt = IF ( ISBLANK ( _delta ), "n/a", FORMAT ( _delta, "+0.0%;(0.0%);0.0%" ) )
+			VAR _pos = NOT ISBLANK ( _delta ) && _delta >= 0
+			VAR _chipBg = IF ( ISBLANK ( _delta ), "rgb(241,245,249)", IF ( _pos, "rgb(220,242,229)", "rgb(250,226,226)" ) )
+			VAR _chipFg = IF ( ISBLANK ( _delta ), "rgb(100,116,139)", IF ( _pos, "rgb(21,128,61)", "rgb(185,28,28)" ) )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>UNITS SOLD</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:" & _chipFg & "; background:" & _chipBg & "; border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>vs last year</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a644
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Vital Few Card' =
+			VAR _prods = FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) )
+			VAR _nAll = COUNTROWS ( _prods )
+			VAR _n80 = COUNTROWS ( FILTER ( _prods, [Cumulative Revenue %] < 0.80 ) ) + 1
+			VAR _share = DIVIDE ( _n80, _nAll )
+			VAR _valTxt = IF ( ISBLANK ( _nAll ) || _nAll = 0, "n/a", _n80 & " SKUs" )
+			VAR _chipTxt = IF ( ISBLANK ( _share ), "n/a", FORMAT ( _share, "0%" ) & " of catalog" )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>THE VITAL FEW</div>"
+			    & "<div style='font-size:32px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:rgb(21,128,61); background:rgb(220,242,229); border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>drive 80% of revenue</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a645
+
+	/// KPI tile (HTML): host in an HTML Content visual, Content field well.
+	measure 'KPI Top Product Card' =
+			VAR _prods = FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) )
+			VAR _topTbl = TOPN ( 1, _prods, [Product Revenue] + dim_product[ProductKey] / 1000000000, DESC )
+			VAR _name = MAXX ( _topTbl, dim_product[ProductName] )
+			VAR _rev = MAXX ( _topTbl, [Product Revenue] )
+			VAR _share = DIVIDE ( _rev, CALCULATE ( [Product Revenue], ALLSELECTED ( dim_product ) ) )
+			VAR _valTxt = IF ( ISBLANK ( _name ), "n/a", _name )
+			VAR _chipTxt = IF ( ISBLANK ( _share ), "n/a", FORMAT ( _share, "0.0%" ) & " of revenue" )
+			RETURN
+			"<div style='font-family:""Segoe UI"", sans-serif; height:calc(100vh - 2px); box-sizing:border-box; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:0 4px;'>"
+			    & "<div style='font-size:11px; letter-spacing:1.5px; font-weight:600; color:rgb(100,116,139);'>TOP PRODUCT</div>"
+			    & "<div style='font-size:19px; font-weight:700; color:rgb(15,23,42); line-height:1.1; margin:3px 0 9px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>" & _valTxt & "</div>"
+			    & "<div style='display:flex; align-items:center; gap:8px;'>"
+			    & "<span style='font-size:12px; font-weight:700; color:rgb(180,83,9); background:rgb(255,237,213); border-radius:12px; padding:4px 10px; white-space:nowrap;'>" & _chipTxt & "</span>"
+			    & "<span style='font-size:10.5px; color:rgb(148,163,184); white-space:nowrap;'>by revenue</span>"
+			    & "</div></div>"
+		displayFolder: 9. KPI Cards
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a646
+
+	/// Deneb statement: pre-formatted Actual text, identical to the HTML prototype formatting.
+	measure 'Line Actual Text' = IF ( ISBLANK ( [P&L Line Value] ), "-", FORMAT ( [P&L Line Value], "#,##0;(#,##0)" ) )
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a647
+
+	measure 'Line Budget Text' = IF ( ISBLANK ( [Budget Line Value] ), "-", FORMAT ( [Budget Line Value], "#,##0;(#,##0)" ) )
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a648
+
+	measure 'Line Variance Text' = IF ( ISBLANK ( [Line Variance] ), "-", FORMAT ( [Line Variance], "+#,##0;(#,##0);0" ) )
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a649
+
+	measure 'Line Var % Text' = IF ( ISBLANK ( [Line Variance %] ), "-", FORMAT ( [Line Variance %], "+0.0%;(0.0%);0.0%" ) )
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a650
+
+	/// Deneb statement: variance color as data, so the spec only draws.
+	measure 'Line Variance Color' = IF ( ISBLANK ( [Line Variance] ), "#94a3b8", IF ( [Line Variance] >= 0, "#16a34a", "#dc2626" ) )
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a651
+
+	/// Dynamic subtitle for the Deneb statement header, same logic as the HTML prototype.
+	measure 'Statement Subtitle' =
+			VAR _lastClosedRaw = [Last Closed Date]
+			VAR _lastClosed = IF ( ISBLANK ( _lastClosedRaw ), MAX ( dim_date[Date] ), _lastClosedRaw )
+			VAR _firstData = CALCULATE ( MIN ( fact_pnl_actuals[Date] ), REMOVEFILTERS () )
+			VAR _period =
+			    IF (
+			        HASONEVALUE ( dim_date[YearMonthKey] ),
+			        SELECTEDVALUE ( dim_date[YearMonthLabel] ),
+			        FORMAT ( MAX ( MIN ( dim_date[Date] ), _firstData ), "MMM YYYY" ) & " to "
+			            & FORMAT ( MIN ( MAX ( dim_date[Date] ), _lastClosed ), "MMM YYYY" )
+			    )
+			VAR _scope =
+			    SWITCH (
+			        TRUE (),
+			        HASONEVALUE ( dim_store[StoreName] ), SELECTEDVALUE ( dim_store[StoreName] ),
+			        HASONEVALUE ( dim_store[Region] ), SELECTEDVALUE ( dim_store[Region] ) & " Region",
+			        "All Stores"
+			    )
+			RETURN
+			    _period & "  ·  " & _scope & "  ·  Actual vs Budget"
+		displayFolder: 6. Statement Lines
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a652
+
+	/// Deneb Pareto: bar color as data (vital few green inside the 80% band).
+	measure 'Pareto Bar Color' = IF ( [Cumulative Revenue %] <= 0.80, "#2d6a4f", "#cbd5e1" )
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a653
+
+	/// Deneb Pareto: cumulative % label only at ranks 1, 5, 10, 15, 20.
+	measure 'Pareto Cum Label' =
+			IF (
+			    [Product Rank] = 1 || MOD ( [Product Rank], 5 ) = 0,
+			    FORMAT ( [Cumulative Revenue %], "0%" ),
+			    BLANK ()
+			)
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a654
+
+	/// Dynamic subtitle for the Deneb Pareto header, same logic as the HTML prototype.
+	measure 'Pareto Subtitle' =
+			VAR _prods = FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) )
+			VAR _nAll = COUNTROWS ( _prods )
+			VAR _nShown = MIN ( _nAll, 20 )
+			VAR _lastClosedRaw = [Last Closed Date]
+			VAR _lastClosed = IF ( ISBLANK ( _lastClosedRaw ), MAX ( dim_date[Date] ), _lastClosedRaw )
+			VAR _firstData = CALCULATE ( MIN ( fact_pnl_actuals[Date] ), REMOVEFILTERS () )
+			VAR _period =
+			    IF (
+			        HASONEVALUE ( dim_date[YearMonthKey] ),
+			        SELECTEDVALUE ( dim_date[YearMonthLabel] ),
+			        FORMAT ( MAX ( MIN ( dim_date[Date] ), _firstData ), "MMM YYYY" ) & " to "
+			            & FORMAT ( MIN ( MAX ( dim_date[Date] ), _lastClosed ), "MMM YYYY" )
+			    )
+			VAR _scope =
+			    SWITCH (
+			        TRUE (),
+			        HASONEVALUE ( dim_store[StoreName] ), SELECTEDVALUE ( dim_store[StoreName] ),
+			        HASONEVALUE ( dim_store[Region] ), SELECTEDVALUE ( dim_store[Region] ) & " Region",
+			        "All Stores"
+			    )
+			RETURN
+			    "Top " & _nShown & " of " & _nAll & " products  ·  " & _period & "  ·  " & _scope
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a655
+
+	/// Dynamic insight line for the Deneb Pareto header.
+	measure 'Pareto Insight' =
+			VAR _prods = FILTER ( ALLSELECTED ( dim_product ), NOT ISBLANK ( [Product Revenue] ) )
+			VAR _nAll = COUNTROWS ( _prods )
+			VAR _n80 = COUNTROWS ( FILTER ( _prods, [Cumulative Revenue %] < 0.80 ) ) + 1
+			RETURN
+			    _n80 & " of " & _nAll & " products drive 80% of revenue"
+		displayFolder: 5. Pareto
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a656
+
+	column Value
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5a1b2c3d-0003-4e5f-8a9b-c0d1e2f3a636
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = User
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Value = Int64.Type], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

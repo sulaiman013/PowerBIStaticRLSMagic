@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporting Portal</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="left">
+      <span class="brand-dot"></span>
+      <span class="title">Reporting Portal</span>
+      <span class="meta">Signed in as <b id="user-email">…</b></span>
+      <span class="chip" id="role-chip">role: …</span>
+      <span class="chip muted" id="usage-chip">trial: …</span>
+      <span class="chip muted" id="token-chip">tokens burned: …</span>
+    </div>
+    <button class="btn-logout" id="logout">Log out</button>
+  </div>
+
+  <div id="report-container">
+    <div class="loading" id="status">Loading your report…</div>
+  </div>
+
+  <!-- powerbi-client from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

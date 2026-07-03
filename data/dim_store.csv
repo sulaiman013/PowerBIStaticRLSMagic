@@ -1,0 +1,13 @@
+StoreKey,StoreCode,StoreName,City,State,Region,StoreTier,SquareFeet,OpenDate
+1,DEN01,Denver Flagship,Denver,CO,Mountain,Flagship,14500,2018-03-15
+2,BLD01,Boulder,Boulder,CO,Mountain,Standard,8200,2019-06-01
+3,SLC01,Salt Lake City,Salt Lake City,UT,Mountain,Standard,7900,2019-09-12
+4,BOI01,Boise,Boise,ID,Mountain,Compact,4600,2021-04-20
+5,SEA01,Seattle Flagship,Seattle,WA,Pacific,Flagship,13800,2017-11-08
+6,PDX01,Portland,Portland,OR,Pacific,Standard,8500,2018-08-22
+7,SAC01,Sacramento,Sacramento,CA,Pacific,Compact,4900,2022-02-14
+8,AUS01,Austin,Austin,TX,Southwest,Standard,8100,2020-10-05
+9,PHX01,Phoenix,Phoenix,AZ,Southwest,Standard,7700,2020-03-18
+10,ABQ01,Albuquerque,Albuquerque,NM,Southwest,Compact,4400,2022-07-11
+11,CHI01,Chicago Flagship,Chicago,IL,Midwest,Flagship,13200,2018-05-30
+12,MSP01,Minneapolis,Minneapolis,MN,Midwest,Standard,8000,2019-11-25

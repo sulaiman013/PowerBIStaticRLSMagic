@@ -1,0 +1,84 @@
+table dim_product
+	lineageTag: ae212eb4-cc64-4037-a174-00261e9730cb
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 71b6953e-e907-4f44-b8b0-4f0de87b237e
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SKU
+		dataType: string
+		lineageTag: 1d47251b-e8ac-4760-b412-1a0570c6becd
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: 1d9d3f4b-53f1-483e-907b-6bf17d111ae2
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 027d1e04-493e-4c1b-92e6-0a4ee74a2b32
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Subcategory
+		dataType: string
+		lineageTag: 5223e96e-8448-405a-88e6-26d155bf7011
+		summarizeBy: none
+		sourceColumn: Subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column PriceTier
+		dataType: string
+		lineageTag: 76bd7e40-bce7-4bd6-b0b0-dd4fed2f615b
+		summarizeBy: none
+		sourceColumn: PriceTier
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		lineageTag: 1f6a3bf3-72d0-40c0-8aed-573fda1eb27e
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UnitCost
+		dataType: double
+		lineageTag: 1c7b95c9-bfbf-478d-b1a3-97572245cab1
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition dim_product = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\dim_product.csv"),[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"ProductKey", Int64.Type}, {"SKU", type text}, {"ProductName", type text}, {"Category", type text}, {"Subcategory", type text}, {"PriceTier", type text}, {"UnitPrice", type number}, {"UnitCost", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

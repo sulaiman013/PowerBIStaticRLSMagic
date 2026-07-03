@@ -1,0 +1,36 @@
+table bridge_pnl_line_account
+	isHidden
+	lineageTag: 5a1b2c3d-0002-4e5f-8a9b-c0d1e2f3a501
+
+	column LineKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5a1b2c3d-0002-4e5f-8a9b-c0d1e2f3a502
+		summarizeBy: none
+		sourceColumn: LineKey
+
+		annotation SummarizationSetBy = User
+
+	column AccountKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5a1b2c3d-0002-4e5f-8a9b-c0d1e2f3a503
+		summarizeBy: none
+		sourceColumn: AccountKey
+
+		annotation SummarizationSetBy = User
+
+	partition bridge_pnl_line_account = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\bridge_pnl_line_account.csv"),[Delimiter=",", Columns=2, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"LineKey", Int64.Type}, {"AccountKey", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

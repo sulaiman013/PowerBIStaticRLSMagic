@@ -1,0 +1,147 @@
+table dim_date
+	lineageTag: 3891296a-b73c-4cdc-b564-4940c516f3b8
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: aabc1314-b024-4e5d-9bb3-9cce8372cc5c
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 634edd9c-b944-442b-852a-40e1e5629b22
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = User
+
+	column QuarterNo
+		dataType: int64
+		formatString: 0
+		lineageTag: ff0665f2-aced-4e65-af6d-74a3e4b2eddf
+		summarizeBy: none
+		sourceColumn: QuarterNo
+
+		annotation SummarizationSetBy = User
+
+	column Quarter
+		dataType: string
+		lineageTag: 61873fd2-f858-4d05-853d-41a60c3075c4
+		summarizeBy: none
+		sourceColumn: Quarter
+		sortByColumn: YearQuarterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		formatString: 0
+		lineageTag: f385ae41-d296-4560-8407-29523e0c15cd
+		summarizeBy: none
+		sourceColumn: MonthNo
+
+		annotation SummarizationSetBy = User
+
+	column MonthName
+		dataType: string
+		lineageTag: bec5108d-9202-4d5a-bee5-87d7c8dbcc36
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthShort
+		dataType: string
+		lineageTag: ba66cdb7-01a2-49ad-834c-dd25bd5337dd
+		summarizeBy: none
+		sourceColumn: MonthShort
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cdca05bc-9400-4e9d-9a05-69582bb748fb
+		summarizeBy: none
+		sourceColumn: YearMonthKey
+
+		annotation SummarizationSetBy = User
+
+	column YearMonthLabel
+		dataType: string
+		lineageTag: 68e7eeb0-c254-4ed1-9086-ca939e7133f3
+		summarizeBy: none
+		sourceColumn: YearMonthLabel
+		sortByColumn: YearMonthKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekdayNo
+		dataType: int64
+		formatString: 0
+		lineageTag: ec2a8e8d-fe94-48f6-adb9-48ef1fdeaf70
+		summarizeBy: none
+		sourceColumn: WeekdayNo
+
+		annotation SummarizationSetBy = User
+
+	column WeekdayName
+		dataType: string
+		lineageTag: bb36309c-facb-4674-b959-6052f0185d00
+		summarizeBy: none
+		sourceColumn: WeekdayName
+		sortByColumn: WeekdayNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		dataType: int64
+		formatString: 0
+		lineageTag: 8287cb5d-67ff-47d8-ba22-3bddbcb4c9ee
+		summarizeBy: none
+		sourceColumn: IsWeekend
+
+		annotation SummarizationSetBy = User
+
+	column YearQuarterKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7c4d9e21-53aa-4f6e-8b2d-90fe3a1c6d10
+		summarizeBy: none
+		sourceColumn: YearQuarterKey
+
+		annotation SummarizationSetBy = User
+
+	column IsClosed
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e8b7f43-91cc-4d2a-b5e6-14ad82c9f731
+		summarizeBy: none
+		sourceColumn: IsClosed
+
+		annotation SummarizationSetBy = User
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\Lenovo\Desktop\portfolio\Migrate to Middle east\Sulaiman Ahmed Linkedin Profile Optimization\Power BI Design Language Blog\POC\data\dim_date.csv"),[Delimiter=",", Columns=14, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Date", type date}, {"Year", Int64.Type}, {"QuarterNo", Int64.Type}, {"Quarter", type text}, {"YearQuarterKey", Int64.Type}, {"MonthNo", Int64.Type}, {"MonthName", type text}, {"MonthShort", type text}, {"YearMonthKey", Int64.Type}, {"YearMonthLabel", type text}, {"WeekdayNo", Int64.Type}, {"WeekdayName", type text}, {"IsWeekend", Int64.Type}, {"IsClosed", Int64.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,19 @@
+{
+  "name": "pbi-embed-static-rls-poc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App-owns-data Power BI embed POC with static RLS roles, service-principal auth, and embed-token conservation.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.16.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}
